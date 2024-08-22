@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { HTTP } from "../../utils";
 import "../../assets/css/modal.css";
 
-const DBModal = ({ handleClose }) => {
+const DBModal = ({ handleClose, onDatabaseCreated }) => {
   const [databaseType, setDatabaseType] = useState("Blazegraph");
   const [namespace, setNamespace] = useState("");
   const [port, setPort] = useState("9999");
@@ -52,18 +52,28 @@ const DBModal = ({ handleClose }) => {
         },
       });
 
+      console.log("Create namespace response:", response);
+
       if (response.status === 200 || response.status === 201) {
         toast.success("Database created successfully.");
-        handleClose(); // Close the modal on success
+        onDatabaseCreated(); // Call this function to update the parent component
+        handleClose(); // Close the modal after successful creation
       } else {
         console.error("Unexpected response:", response);
         toast.error("Failed to create the database. Please try again.");
       }
     } catch (error) {
       console.error("There was an error creating the database:", error);
-      if (error.response && error.response.data) {
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
         toast.error(`Error: ${error.response.data.detail || "Unknown error"}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        toast.error("No response received from the server. Please try again.");
       } else {
+        console.error("Error message:", error.message);
         toast.error("An error occurred. Please try again.");
       }
     } finally {

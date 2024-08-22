@@ -8,45 +8,47 @@ import { HTTP } from "../utils";
 
 const MainContent = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => setIsOpen(false);
-  const handleOpen = () => setIsOpen(true);
-
   const [isOpenRepository, setIsOpenRepository] = useState(false);
-  const handleCloseRepository = () => setIsOpenRepository(false);
-  const handleOpenRepository = () => setIsOpenRepository(true);
-
   const [activeDatabase, setActiveDatabase] = useState(null);
-  const [activeRepository, setActiveRepository] = useState(null);
+  const [activeRepositories, setActiveRepositories] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchActiveDatabase();
-    fetchActiveRepository();
+    fetchActiveRepositories();
   }, []);
 
   const fetchActiveDatabase = async () => {
+    setIsLoading(true);
     try {
       const response = await HTTP.get("/active-database/");
-      setActiveDatabase(response.data);
+      console.log("Active database response:", response.data);
+      setActiveDatabase(response.data.active_database);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching active database:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const fetchActiveRepository = async () => {
+  const fetchActiveRepositories = async () => {
     try {
       const response = await HTTP.get("/active-repository/");
-      setActiveRepository(response.data);
+      console.log("Active repositories response:", response.data);
+      setActiveRepositories(response.data.active_repositories);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching active repositories:", error);
     }
   };
 
-  const handleNewDatabase = () => {
-    handleOpen();
-  };
+  const handleClose = () => setIsOpen(false);
+  const handleOpen = () => setIsOpen(true);
+  const handleCloseRepository = () => setIsOpenRepository(false);
+  const handleOpenRepository = () => setIsOpenRepository(true);
 
-  const handleNewRepository = () => {
-    handleOpenRepository();
+  const handleDatabaseCreated = () => {
+    fetchActiveDatabase();
+    handleClose();
   };
 
   return (
@@ -57,16 +59,17 @@ const MainContent = () => {
           <h3 className="mb-3">
             Active Database Information{" "}
             <CiCirclePlus
-              onClick={() => handleNewDatabase()}
+              onClick={handleOpen}
               style={{ cursor: "pointer" }}
             />
           </h3>
 
-          {activeDatabase ? (
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : activeDatabase ? (
             <div className="shadow-sm p-3 mb-5 bg-body rounded">
               <div className="card-body" style={{ height: "20vh" }}>
-                <h5>Database Name: {activeDatabase.name}</h5>
-                <p>Database Description: {activeDatabase.description}</p>
+                <h5>Database Name: {activeDatabase}</h5>
               </div>
             </div>
           ) : (
@@ -79,31 +82,34 @@ const MainContent = () => {
         </div>
         <div>
           <h3>
-            Repository{" "}
+            Repositories{" "}
             <CiCirclePlus
-              onClick={() => handleNewRepository()}
+              onClick={handleOpenRepository}
               style={{ cursor: "pointer" }}
             />
           </h3>
 
-          {activeRepository ? (
+          {activeRepositories && activeRepositories.length > 0 ? (
             <div className="shadow-sm p-3 mb-5 bg-body rounded">
               <div className="card-body" style={{ height: "20vh" }}>
-                <h5>Repository Name: {activeRepository.name}</h5>
-                <p>Repository Description: {activeRepository.description}</p>
+                <h5>Active Repositories:</h5>
+                <ul>
+                  {activeRepositories.map((repo, index) => (
+                    <li key={index}>{repo}</li>
+                  ))}
+                </ul>
               </div>
             </div>
           ) : (
             <div className="shadow-sm p-3 mb-5 bg-body rounded">
               <div className="card-body" style={{ height: "20vh" }}>
-                No active repository found.
+                No active repositories found.
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal for creating a new database */}
       <BModal
         show={isOpen}
         onHide={handleClose}
@@ -112,10 +118,9 @@ const MainContent = () => {
         keyboard={false}
         size="lg"
       >
-        <DBModal handleClose={handleClose} />
+        <DBModal handleClose={handleClose} onDatabaseCreated={handleDatabaseCreated} />
       </BModal>
 
-      {/* Modal for connecting an existing database */}
       <BModal
         show={isOpenRepository}
         onHide={handleCloseRepository}
