@@ -84,12 +84,12 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': 'puzzpmbo_graph',        
-        'USER': 'puzzpmbo_db_graph',        
-        'PASSWORD': '*-E(r{3H?-ij',   
-        'HOST': 'localhost',                  
-        'PORT': '3306',                       
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mydatabase',
+        'USER': 'myuser',
+        'PASSWORD': 'mypassword',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 

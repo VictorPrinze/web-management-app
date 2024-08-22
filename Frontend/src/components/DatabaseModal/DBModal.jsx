@@ -10,13 +10,14 @@ const DBModal = ({ handleClose }) => {
   const [minMemory, setMinMemory] = useState("");
   const [maxMemory, setMaxMemory] = useState("");
   const [installationPath, setInstallationPath] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!databaseType || !installationPath) {
+    if (!databaseType || !installationPath || !namespace) {
       toast.error(
-        "Please select the database type and provide the installation path."
+        "Please select the database type, provide the installation path, and enter a namespace."
       );
       return;
     }
@@ -40,19 +41,33 @@ const DBModal = ({ handleClose }) => {
       installationPath,
     };
 
+    setLoading(true);
+
     try {
-      await HTTP.post("/create_namespace/", data, {
+      const response = await HTTP.post("/create_namespace/", data, {
         headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest",
           Accept: "application/json",
         },
       });
-      toast.success("Database created successfully.");
-      handleClose();
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Database created successfully.");
+        handleClose(); // Close the modal on success
+      } else {
+        console.error("Unexpected response:", response);
+        toast.error("Failed to create the database. Please try again.");
+      }
     } catch (error) {
-      console.error("There was an error creating the database!", error);
-      toast.error("Failed to create the database. Please try again.");
+      console.error("There was an error creating the database:", error);
+      if (error.response && error.response.data) {
+        toast.error(`Error: ${error.response.data.detail || "Unknown error"}`);
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,12 +86,9 @@ const DBModal = ({ handleClose }) => {
     <React.Fragment>
       <form onSubmit={handleSubmit}>
         <p className="text-muted">
-          새로운 데이터베이스를 생성하기 위해 데이터베이스의 유형을 선택하고,
-          설치 경로와 Port를 입력해주세요. 추가적으로 최소/최대 메모리 사용량을
-          입력하면, 이에 맞게 데이터베이스가 실행됩니다.
+          To create a new database, select the database type, provide the installation path, and enter a namespace. Optionally, you can specify memory usage.
         </p>
 
-        {/* Database Type Selection */}
         <h6>Required</h6>
         <div className="mb-3 row align-items-center">
           <label htmlFor="databaseType" className="col-sm-3 col-form-label">
@@ -95,7 +107,22 @@ const DBModal = ({ handleClose }) => {
           </div>
         </div>
 
-        {/* Installation Path */}
+        <div className="mb-3 row align-items-center">
+          <label htmlFor="namespace" className="col-sm-3 col-form-label">
+            Namespace
+          </label>
+          <div className="col-sm-9">
+            <input
+              type="text"
+              id="namespace"
+              className="form-control"
+              value={namespace}
+              onChange={(e) => setNamespace(e.target.value)}
+              placeholder="Enter namespace"
+            />
+          </div>
+        </div>
+
         <div className="mb-3 row align-items-center">
           <label htmlFor="installationPath" className="col-sm-3 col-form-label">
             Installation Path
@@ -122,7 +149,6 @@ const DBModal = ({ handleClose }) => {
           </div>
         </div>
 
-        {/* Hidden File Input for Folder Selection */}
         <input
           type="file"
           id="fileInput"
@@ -131,7 +157,6 @@ const DBModal = ({ handleClose }) => {
           onChange={handleFileChange}
         />
 
-        {/* Port */}
         <div className="mb-3 row align-items-center">
           <label htmlFor="port" className="col-sm-3 col-form-label">
             Port
@@ -148,7 +173,6 @@ const DBModal = ({ handleClose }) => {
         </div>
 
         <h6>Optional</h6>
-        {/* Minimum Memory Usage */}
         <div className="mb-3 row align-items-center">
           <label htmlFor="minMemory" className="col-sm-5 col-form-label">
             Minimum Memory Usage (-Xms)
@@ -164,7 +188,6 @@ const DBModal = ({ handleClose }) => {
           </div>
         </div>
 
-        {/* Maximum Memory Usage */}
         <div className="mb-3 row align-items-center">
           <label htmlFor="maxMemory" className="col-sm-5 col-form-label">
             Maximum Memory Usage (-Xmx)
@@ -181,8 +204,8 @@ const DBModal = ({ handleClose }) => {
         </div>
 
         <div className="d-flex justify-content-center mt-5">
-          <button type="submit" className="btn btn-primary w-50">
-            Create database
+          <button type="submit" className="btn btn-primary w-50" disabled={loading}>
+            {loading ? "Creating..." : "Create Database"}
           </button>
         </div>
       </form>
