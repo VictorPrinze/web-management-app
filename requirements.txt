@@ -3,5 +3,6 @@ mysqlclient
 django-cors-headers
 requests
 gunicorn
+whitenoise
 
 web: gunicorn web_management_app.wsgi
