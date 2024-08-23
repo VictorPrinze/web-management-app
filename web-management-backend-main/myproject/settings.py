@@ -69,7 +69,8 @@ DATABASES = {
         'NAME': 'kariukivictor226$default',  # Use the correct database name
         'USER': 'kariukivictor226',  # Use the correct username
         'PASSWORD': os.environ.get('MYSQL_PASSWORD'),  # Ensure this environment variable is set
-        'HOST': 'kariukivictor226.mysql.pythonanywhere-services.com',  # Corrected hostname
+        'HOST': 'kariukivictor226.mysql.pythonanywhere-services.com',
+  
         'PORT': '3306',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
